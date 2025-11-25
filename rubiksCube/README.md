@@ -4,7 +4,7 @@ Créé en suivant le tuto de learnopengl.com/
 
 Utilise openGL et glfw3 3.4
 
-## Utilisation :  
+## Build :  
 ``` console
 cd rubiksCube  
 mkdir build  
@@ -13,3 +13,12 @@ cmake ..
 make  
 ./rubiks  
 ```
+
+## Utilisation
+On peut se mouvoir dans l'espace avec zsqd, espace pour monter et shift pour descendre  
+
+En appuyant sur 't', on peut taper dans la console les mouvements que l'on veut faire (suit la notation officielle).  
+Exemple :   
+R R' D2 B'2  
+
+**Remarque :** M, M', x, y et z ne sont pas supporté
