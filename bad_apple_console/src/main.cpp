@@ -9,15 +9,20 @@
 #include <unistd.h> //sleep linux
 
 int main(int argc, char *argv[]) {
+  if(argc !=2){
+    std::cout<<"Veillez entrer un flag <video.mp4>\n";
+    return -1;
+  }
+  std::cout<<"debug\n";
+
   // open the video file for reading
   std::string file_name=argv[1];
   file_name = argv[1];
-  cv::VideoCapture cap("../src/"+file_name);
+  cv::VideoCapture cap("../video/"+file_name);
 
   // if not success, exit program
   if (cap.isOpened() == false) {
     std::cout << "Cannot open the video file" << std::endl;
-    std::cin.get(); // wait for any key press
     return -1;
   }
 
