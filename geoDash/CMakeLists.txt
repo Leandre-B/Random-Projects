@@ -19,6 +19,7 @@ FetchContent_MakeAvailable(json)
 add_executable(geoDash
     src/main.cpp
     src/parse_level.cpp
+    src/game.cpp
 )
 target_link_libraries(geoDash PRIVATE sfml-graphics sfml-window sfml-system nlohmann_json::nlohmann_json)
 target_compile_features(geoDash PRIVATE cxx_std_17)
