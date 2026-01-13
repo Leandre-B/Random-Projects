@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.25)
 project(CMakeSFMLProject LANGUAGES CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -16,5 +16,5 @@ FetchContent_MakeAvailable(SFML)
 add_executable(geoDash
     src/main.cpp
 )
-target_link_libraries(geoDash PRIVATE sfml-graphics)
+target_link_libraries(geoDash PRIVATE sfml-graphics sfml-window sfml-system)
 target_compile_features(geoDash PRIVATE cxx_std_17)

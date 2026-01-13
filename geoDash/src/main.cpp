@@ -7,6 +7,7 @@ uint GRAVITY = 6000;
 int YSPEED = 0;
 int XSPEED = 80000;
 bool jump = false;
+bool onGround = false;
 uint GROUND = 1080;
 
 using Plateau = std::array<std::array<char,20>, 1000>;
@@ -24,8 +25,7 @@ bool spikeCollision(sf::Sprite & cube, sf::Sprite & spike){
 }
 int main()
 {
-    auto window = sf::RenderWindow({1920u, 1080u}, "CMake SFML Project",
-                                   sf::Style::Fullscreen);
+    auto window = sf::RenderWindow({1200u, 800u}, "CMake SFML Project"/*,sf::Style::Fullscreen*/);
     window.setFramerateLimit(144);
 
 
@@ -34,16 +34,20 @@ int main()
         for(int j=0; j<20; ++j)
             plt[i][j]=='n';
 
-    for(int i=20; i<1000; i+=15)
-        plt[i][1] = 'b';
-
     //blocks
-    for(int i=10; i<1000; i+=10)
-        plt[i][5] = 'b';
+    for(int i=10; i<12; ++i)
+        plt[i][2] = 'b';
+    for(int i=16; i<17; ++i)
+        plt[i][4] = 'b';
+    for(int i=19; i<21; ++i)
+        plt[i][7] = 'b';
 
     //sol
     for(int i=0; i<1000; i+=1)
         plt[i][0] = 'b';
+
+    for(int i=12; i<1000; i+=1)
+        plt[i][1] = 's';
 
     //== TEXTURES ==
     sf::Texture textureCube;
@@ -62,24 +66,28 @@ int main()
     sf::Clock clock;
     sf::View camera;
     camera.setSize(window.getSize().x, window.getSize().y);
+    sf::Event event;
 
     while (window.isOpen())
     {
         sf::Time dt = clock.getElapsedTime();
         clock.restart();
 
-        for (auto event = sf::Event(); window.pollEvent(event);)
+        while (window.pollEvent(event))
         {
+
             if (event.type == sf::Event::Closed or sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
             {
                 window.close();
             }
-            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+            if (event.type == sf::Event::KeyPressed)
             {
-                    if(!jump){
+                if (event.key.code == sf::Keyboard::Space){
+                    if(onGround){
                         YSPEED = -1600;
-                        jump = true;
+                        onGround = false;
                     }
+                }
             }
         }
 
@@ -111,24 +119,34 @@ int main()
                     rect.setFillColor(sf::Color(255,150,255));
                     window.draw(rect);
 
+                    //collision avec bloc
                     if(rect.getGlobalBounds().intersects(cube.getGlobalBounds())){
+                        //si le joueurs (cube) est au dessus du bloc
                         if(rect.getGlobalBounds().top >=
-                            (cube.getGlobalBounds().top- 64))
+                            (cube.getGlobalBounds().top +50))
                         {
-                            cube.setPosition(cube.getPosition().x, rect.getGlobalBounds().top - cube.getGlobalBounds().height);
+                            cube.setPosition(cube.getPosition().x, rect.getGlobalBounds().top - 64);
                             YSPEED = 0;
-                            jump = false;
+                            onGround = true;
 
-                        }else{
+                        //sinon perdu
+                        }else if(cube.getGlobalBounds().top != rect.getGlobalBounds().top + 64){
                             XSPEED  = 0;
                             YSPEED  = 0;
                             GRAVITY = 0;
+                            onGround = false;
                         }
                     }
                 }
 
             }
         }
+        std::cout<<cube.getGlobalBounds().left/64<<" "<<cube.getGlobalBounds().top/64 -1<<"\n";
+        if(plt[cube.getGlobalBounds().left/64][cube.getGlobalBounds().top/64 -1]=='b')
+            onGround = true;
+        else
+            onGround = false;
+        //std::cout<<onGround<<"\n";
 
         camera.setCenter(cube.getPosition().x + 600, 800);
         window.setView(camera);
