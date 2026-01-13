@@ -3,6 +3,8 @@
 #include <array>
 #include <cmath>
 
+#include "parse_level.h"
+
 uint GRAVITY = 6000;
 int YSPEED = 0;
 int XSPEED = 80000;
@@ -25,29 +27,18 @@ bool spikeCollision(sf::Sprite & cube, sf::Sprite & spike){
 }
 int main()
 {
+
+    Level plt = foo();
+    for (const auto &ligne : plt.game) {
+        for (char val : ligne) {
+            std::cout << val << " ";
+        }
+        std::cout << std::endl;
+    }
     auto window = sf::RenderWindow({1200u, 800u}, "CMake SFML Project"/*,sf::Style::Fullscreen*/);
     window.setFramerateLimit(144);
 
 
-    Plateau plt;
-    for(int i=0; i<1000; ++i)
-        for(int j=0; j<20; ++j)
-            plt[i][j]=='n';
-
-    //blocks
-    for(int i=10; i<12; ++i)
-        plt[i][2] = 'b';
-    for(int i=16; i<17; ++i)
-        plt[i][4] = 'b';
-    for(int i=19; i<21; ++i)
-        plt[i][7] = 'b';
-
-    //sol
-    for(int i=0; i<1000; i+=1)
-        plt[i][0] = 'b';
-
-    for(int i=12; i<1000; i+=1)
-        plt[i][1] = 's';
 
     //== TEXTURES ==
     sf::Texture textureCube;
@@ -97,9 +88,9 @@ int main()
         window.clear(sf::Color(255,150,150));
 
 
-         for(int i=0; i<1000; ++i){
-            for(int j=0; j<20; ++j){
-                if(plt[i][j]=='s')
+         for(int i=0; i<plt.width; ++i){
+            for(int j=0; j<plt.height; ++j){
+                if(plt.game[i][j]=='s')
                 {
                     sf::Sprite spike(textureSpike);
                     spike.setScale(2,2);
@@ -112,7 +103,7 @@ int main()
 
                     }
                 }
-                else if(plt[i][j]=='b')
+                else if(plt.game[i][j]=='b')
                 {
                     sf::RectangleShape rect(sf::Vector2f(64, 64));
                     rect.setPosition(i*64, GROUND - j*64);
@@ -141,8 +132,8 @@ int main()
 
             }
         }
-        std::cout<<cube.getGlobalBounds().left/64<<" "<<cube.getGlobalBounds().top/64 -1<<"\n";
-        if(plt[cube.getGlobalBounds().left/64][cube.getGlobalBounds().top/64 -1]=='b')
+
+        if((plt.game[cube.getGlobalBounds().left/64][GROUND/64 - cube.getGlobalBounds().top/64]=='b') or (plt.game[(cube.getGlobalBounds().left/64) +1][GROUND/64 - cube.getGlobalBounds().top/64]=='b'))
             onGround = true;
         else
             onGround = false;
