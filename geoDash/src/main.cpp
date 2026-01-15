@@ -10,7 +10,7 @@ int main()
 {
     Fenetre fenetre  = menu;
     auto window = sf::RenderWindow({1200u, 800u}, "CMake SFML Project",sf::Style::Fullscreen);
-    window.setFramerateLimit(60);
+    window.setFramerateLimit(144);
 
     sf::Font font;
     font.loadFromFile("../assets/MapleMono-Regular.ttf");

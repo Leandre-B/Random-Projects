@@ -5,7 +5,7 @@
 #include <iostream>
 
 
-using json = nlohmann::json;
+using json = nlohmann::ordered_json;
 
 struct Level{
     std::vector<std::vector<char>> game;

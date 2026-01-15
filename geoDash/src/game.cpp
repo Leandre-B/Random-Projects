@@ -13,7 +13,7 @@ bool spikeCollision(sf::Sprite & cube, sf::Sprite & spike){
 }
 void play_game(sf::RenderWindow & window)
 {
-    uint GRAVITY = 10000;
+    uint GRAVITY = 7500;
     int YSPEED = 0;
     int XSPEED = 700;
     bool jump = false;
@@ -37,12 +37,15 @@ void play_game(sf::RenderWindow & window)
     //===
 
     sf::Sprite cube(textureCube);
+    cube.setOrigin(16.f, 16.f);
     cube.setScale(2,2);
-    cube.setPosition(plt.spawn_coord.first*64 , GROUND - plt.spawn_coord.second*64);
+    cube.setPosition(plt.spawn_coord.first*64 + 64 , GROUND - plt.spawn_coord.second*64);
 
     sf::Clock clock;
     sf::View camera;
     camera.setSize(window.getSize().x, window.getSize().y);
+    camera.setCenter(cube.getPosition().x + 400, GROUND - plt.spawn_coord.second*64);
+
     sf::Event event;
     bool exit = false;
     while (!exit)
@@ -61,18 +64,38 @@ void play_game(sf::RenderWindow & window)
             {
                 if (event.key.code == sf::Keyboard::Space){
                     if(onGround){
-                        YSPEED = -2000;
+                        YSPEED = -1650;
                         onGround = false;
                     }
+                }
+                else if (event.key.code == sf::Keyboard::R){
+                    cube.setPosition(plt.spawn_coord.first*64 + 64 , GROUND - plt.spawn_coord.second*64);
+                    cube.setRotation(0);
+                    camera.setCenter(cube.getPosition().x + 400, GROUND - plt.spawn_coord.second*64);
+                    lost=false;
                 }
             }
         }
 
         YSPEED +=GRAVITY*dt.asSeconds();
-        if(YSPEED>1000)
-            YSPEED = 1000;
-        if(!lost)
+        if(YSPEED>900)
+            YSPEED = 900;
+        if(!lost){
             cube.move(XSPEED*dt.asSeconds(), YSPEED*dt.asSeconds());
+            if(!onGround)
+                cube.rotate(300*dt.asSeconds());
+            else{
+                int rota = int (cube.getRotation())%360;
+                if(rota>= 45 and rota<135)
+                    cube.setRotation(90);
+                else if(rota>= 135 and rota<225)
+                    cube.setRotation(180);
+                else if(rota>= 225 and rota<315)
+                    cube.setRotation(270);
+                else
+                    cube.setRotation(0);
+            }
+        }
 
         window.clear(sf::Color(255,150,150));
 
@@ -103,7 +126,7 @@ void play_game(sf::RenderWindow & window)
                         if(rect.getGlobalBounds().top >=
                             (cube.getGlobalBounds().top +40))
                         {
-                            cube.setPosition(cube.getPosition().x, rect.getGlobalBounds().top - 64);
+                            cube.setPosition(cube.getPosition().x, rect.getGlobalBounds().top - 32);
                             YSPEED = 0;
                             onGround = true;
 
@@ -115,13 +138,27 @@ void play_game(sf::RenderWindow & window)
                 }
             }
         }
-
-        if((plt.game[cube.getGlobalBounds().left/64][GROUND/64 - cube.getGlobalBounds().top/64]=='b') or (plt.game[(cube.getGlobalBounds().left/64) +1][GROUND/64 - cube.getGlobalBounds().top/64]=='b'))
-            onGround = true;
+        if(GROUND/64 - cube.getGlobalBounds().top/64 >0)
+            if((plt.game[cube.getGlobalBounds().left/64][GROUND/64 - cube.getGlobalBounds().top/64]=='b') or (plt.game[(cube.getGlobalBounds().left/64) +1][GROUND/64 - cube.getGlobalBounds().top/64]=='b'))
+                onGround = true;
+            else
+                onGround = false;
         else
-            onGround = false;
+            lost = true;
 
-        camera.setCenter(cube.getPosition().x + 400, cube.getPosition().y);
+        if(cube.getPosition().y < camera.getCenter().y -150)
+        {
+            camera.setCenter(cube.getPosition().x + 400, camera.getCenter().y);
+            camera.move(0, -250*dt.asSeconds());
+        }
+        else if(cube.getPosition().y > camera.getCenter().y + 150 and !onGround)
+        {
+            camera.setCenter(cube.getPosition().x + 400, camera.getCenter().y);
+            camera.move(0, 500*dt.asSeconds());
+        }
+        else
+            camera.setCenter(cube.getPosition().x + 400, camera.getCenter().y);
+
         window.setView(camera);
 
         window.draw(cube);

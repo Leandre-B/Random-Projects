@@ -4,8 +4,6 @@
 #include <fstream>
 #include <nlohmann/json.hpp>
 
-using json = nlohmann::json;
-
 void save(const Level & level) {
     json data;
 
@@ -22,18 +20,18 @@ void save(const Level & level) {
         }
     }
 
-    data["blocks"] = blocks;
-    data["spikes"] = spikes;
     data["height"] = level.height;
     data["width"]  = level.width;
     data["spawn"]  = {0, 1};
+    data["blocks"] = blocks;
+    data["spikes"] = spikes;
 
     // On écrit dans le fichier
     std::ofstream out("../levels/test.json");
     if (!out.is_open()) {
         throw std::runtime_error("Impossible d'ouvrir le fichier pour écriture");
     }
-    out << data.dump(2);
+    out << data.dump(-1);
     out.close();
     std::cout<<"Niveau enregistré\n";
 }

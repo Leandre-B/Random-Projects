@@ -6,7 +6,7 @@
 #include <iostream>
 
 
-using json = nlohmann::json;
+using json = nlohmann::ordered_json;
 
 
 void editeur(sf::RenderWindow & window);
