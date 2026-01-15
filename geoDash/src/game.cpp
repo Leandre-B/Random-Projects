@@ -1,18 +1,9 @@
 #include "game.h"
 
-uint GRAVITY = 6000;
-int YSPEED = 0;
-int XSPEED = 80000;
-bool jump = false;
-bool onGround = false;
-uint GROUND = 1080;
-
-using Plateau = std::array<std::array<char,20>, 1000>;
-
 bool spikeCollision(sf::Sprite & cube, sf::Sprite & spike){
     sf::FloatRect hitbox(
         spike.getGlobalBounds().left + 10.f,
-        spike.getGlobalBounds().top  + 10.f,
+        spike.getGlobalBounds().top  + 30.f,
         30.f,
         30.f
     );
@@ -22,32 +13,32 @@ bool spikeCollision(sf::Sprite & cube, sf::Sprite & spike){
 }
 void play_game(sf::RenderWindow & window)
 {
+    uint GRAVITY = 6000;
+    int YSPEED = 0;
+    int XSPEED = 40000;
+    bool jump = false;
+    bool onGround = false;
+    uint GROUND = 1080;
+    bool lost = false;
 
     Level plt = foo();
-    for (const auto &ligne : plt.game) {
-        for (char val : ligne) {
-            std::cout << val << " ";
-        }
-        std::cout << std::endl;
-    }
-    auto window = sf::RenderWindow({1200u, 800u}, "CMake SFML Project"/*,sf::Style::Fullscreen*/);
-    window.setFramerateLimit(144);
-
 
 
     //== TEXTURES ==
     sf::Texture textureCube;
-    if (!textureCube.loadFromFile("../assets/cube.png"))
-        return EXIT_FAILURE;
+    textureCube.loadFromFile("../assets/cube.png");
+    // if (!textureCube.loadFromFile("../assets/cube.png"))
+    //     return EXIT_FAILURE;
 
     sf::Texture textureSpike;
-    if (!textureSpike.loadFromFile("../assets/spike.png"))
-        return EXIT_FAILURE;
+    textureSpike.loadFromFile("../assets/spike.png");
+    // if (!textureSpike.loadFromFile("../assets/spike.png"))
+    //     return EXIT_FAILURE;
     //===
 
     sf::Sprite cube(textureCube);
     cube.setScale(2,2);
-    cube.setPosition(200, 1016);
+    cube.setPosition(plt.spawn_coord.first*64 , GROUND - plt.spawn_coord.second*64);
 
     sf::Clock clock;
     sf::View camera;
@@ -62,9 +53,10 @@ void play_game(sf::RenderWindow & window)
         while (window.pollEvent(event))
         {
 
-            if (event.type == sf::Event::Closed or sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+            if (event.type == sf::Event::Closed or sf::Keyboard::isKeyPressed(sf::Keyboard::P))
             {
-                window.close();
+                return;
+                exit = true;
             }
             if (event.type == sf::Event::KeyPressed)
             {
@@ -78,7 +70,8 @@ void play_game(sf::RenderWindow & window)
         }
 
         YSPEED +=GRAVITY*dt.asSeconds();
-        cube.move(XSPEED*dt.asSeconds()*dt.asSeconds(), YSPEED*dt.asSeconds());
+        if(!lost)
+            cube.move(XSPEED*dt.asSeconds()*dt.asSeconds(), YSPEED*dt.asSeconds());
 
         window.clear(sf::Color(255,150,150));
 
@@ -92,9 +85,7 @@ void play_game(sf::RenderWindow & window)
                     spike.setPosition(i*64, GROUND - j*64);
                     window.draw(spike);
                     if(spikeCollision(spike,cube)){
-                        XSPEED  = 0;
-                        YSPEED  = 0;
-                        GRAVITY = 0;
+                        lost = true;
 
                     }
                 }
@@ -109,7 +100,7 @@ void play_game(sf::RenderWindow & window)
                     if(rect.getGlobalBounds().intersects(cube.getGlobalBounds())){
                         //si le joueurs (cube) est au dessus du bloc
                         if(rect.getGlobalBounds().top >=
-                            (cube.getGlobalBounds().top +50))
+                            (cube.getGlobalBounds().top +40))
                         {
                             cube.setPosition(cube.getPosition().x, rect.getGlobalBounds().top - 64);
                             YSPEED = 0;
@@ -117,14 +108,10 @@ void play_game(sf::RenderWindow & window)
 
                         //sinon perdu
                         }else if(cube.getGlobalBounds().top != rect.getGlobalBounds().top + 64){
-                            XSPEED  = 0;
-                            YSPEED  = 0;
-                            GRAVITY = 0;
-                            onGround = false;
+                            lost  = true;
                         }
                     }
                 }
-
             }
         }
 
@@ -132,9 +119,8 @@ void play_game(sf::RenderWindow & window)
             onGround = true;
         else
             onGround = false;
-        //std::cout<<onGround<<"\n";
 
-        camera.setCenter(cube.getPosition().x + 600, 800);
+        camera.setCenter(cube.getPosition().x + 400, cube.getPosition().y);
         window.setView(camera);
 
         window.draw(cube);

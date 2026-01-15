@@ -9,4 +9,5 @@
 
 
 
-void play_game(sf::RenderWindow);
+using Plateau = std::array<std::array<char,20>, 1000>;
+void play_game(sf::RenderWindow & window);

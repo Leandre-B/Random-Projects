@@ -1,43 +1,65 @@
 #include <iostream>
 #include <SFML/Graphics.hpp>
 
-#include "game.h"
+#include "selection.h"
+#include "editeur.h"
 
-
-enum Fenetre {menu, jeu};
+enum Fenetre {menu, selection, editor};
 
 int main()
 {
-    Fenetre fenetre  = jeu;
-    auto window = sf::RenderWindow({1200u, 800u}, "CMake SFML Project"/*,sf::Style::Fullscreen*/);
-    window.setFramerateLimit(144);
+    Fenetre fenetre  = menu;
+    auto window = sf::RenderWindow({1200u, 800u}, "CMake SFML Project",sf::Style::Fullscreen);
+    window.setFramerateLimit(60);
 
-    sf::Clock clock;
-    sf::View camera;
-    camera.setSize(window.getSize().x, window.getSize().y);
+    sf::Font font;
+    font.loadFromFile("../assets/MapleMono-Regular.ttf");
+    sf::Text txt_menu("Menu", font, 40);
+
     sf::Event event;
-
     while (window.isOpen())
     {
-        sf::Time dt = clock.getElapsedTime();
-        clock.restart();
 
         while (window.pollEvent(event))
         {
 
             if (event.type == sf::Event::Closed or sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
             {
+                std::cout<<"quitting\n";
                 window.close();
+            }
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::M))
+            {
+                fenetre = selection;
+            }
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+            {
+                fenetre = editor;
             }
         }
 
+        window.clear();
+
         switch(fenetre){
-            case jeu:
-                play_game(window);
+            case selection:
+                open_selection(window);
+                fenetre = menu;
                 break;
             case menu:
-                std::cout<<"menu\n";
-                //play_menu();
+                window.draw(txt_menu);
+                break;
+
+            case editor:
+                editeur(window);
+                fenetre = menu;
+                break;
+
+            default:
+                break;
         }
+
+        window.display();
     }
+
+    return 0;
 }
