@@ -2,9 +2,9 @@
 
 bool spikeCollision(sf::Sprite & cube, sf::Sprite & spike){
     sf::FloatRect hitbox(
-        spike.getGlobalBounds().left + 10.f,
+        spike.getGlobalBounds().left + 27.f,
         spike.getGlobalBounds().top  + 30.f,
-        30.f,
+        10.f,
         30.f
     );
 
@@ -13,9 +13,9 @@ bool spikeCollision(sf::Sprite & cube, sf::Sprite & spike){
 }
 void play_game(sf::RenderWindow & window)
 {
-    uint GRAVITY = 6000;
+    uint GRAVITY = 10000;
     int YSPEED = 0;
-    int XSPEED = 800;
+    int XSPEED = 700;
     bool jump = false;
     bool onGround = false;
     uint GROUND = 1080;
@@ -61,7 +61,7 @@ void play_game(sf::RenderWindow & window)
             {
                 if (event.key.code == sf::Keyboard::Space){
                     if(onGround){
-                        YSPEED = -1600;
+                        YSPEED = -2000;
                         onGround = false;
                     }
                 }
@@ -69,8 +69,8 @@ void play_game(sf::RenderWindow & window)
         }
 
         YSPEED +=GRAVITY*dt.asSeconds();
-        if(YSPEED>1200)
-            YSPEED = 1200;
+        if(YSPEED>1000)
+            YSPEED = 1000;
         if(!lost)
             cube.move(XSPEED*dt.asSeconds(), YSPEED*dt.asSeconds());
 

@@ -42,6 +42,9 @@ void save(const Level & level) {
 void editeur(sf::RenderWindow & window)
 {
     uint GROUND = 1080;
+    Level level = foo();
+    level.width = 1000;
+    level.height=100;
 
     sf::Font font;
     font.loadFromFile("../assets/MapleMono-Regular.ttf");
@@ -50,11 +53,8 @@ void editeur(sf::RenderWindow & window)
     sf::Event event;
     sf::View camera;
     camera.setSize(window.getSize().x, window.getSize().y);
+    camera.setCenter(10, 1000);
 
-    Level level = foo();
-    level.width = 1000;
-    level.height=100;
-    level.game.resize(level.width, std::vector<char>(level.height));
 
     sf::Texture textureSpike;
     textureSpike.loadFromFile("../assets/spike.png");
@@ -73,13 +73,13 @@ void editeur(sf::RenderWindow & window)
                 return;
             }
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Z))
-                camera.move(0, -200*dt.asSeconds());
+                camera.move(0, -500*dt.asSeconds());
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-                camera.move(0, 200*dt.asSeconds());
+                camera.move(0, 500*dt.asSeconds());
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
-                camera.move(-200*dt.asSeconds(), 0);
+                camera.move(-500*dt.asSeconds(), 0);
             if(sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-                camera.move(200*dt.asSeconds(), 0);
+                camera.move(500*dt.asSeconds(), 0);
 
             if (sf::Mouse::isButtonPressed(sf::Mouse::Left))
             {
@@ -96,13 +96,20 @@ void editeur(sf::RenderWindow & window)
                 if(i>=0 and j>=0 and i<level.width and j<level.height)
                     level.game[i][j]='s';
             }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::C))
+            {
+                int i = window.mapPixelToCoords(sf::Mouse::getPosition(window)).x/64;
+                int j = GROUND/64 - window.mapPixelToCoords(sf::Mouse::getPosition(window)).y/64 +2;
+                if(i>=0 and j>=0 and i<level.width and j<level.height)
+                    level.game[i][j]='n';
+            }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::M))
             {
                 save(level);
             }
         }
 
-        window.clear();
+        window.clear(sf::Color(255,150,150));
 
         for(int i=0; i<level.width; ++i){
             for(int j=0; j<level.height; ++j){
@@ -121,15 +128,15 @@ void editeur(sf::RenderWindow & window)
                     rect.setFillColor(sf::Color(255,150,255));
                     window.draw(rect);
                 }
-                else{
-                    sf::RectangleShape rect(sf::Vector2f(64, 64));
-                    rect.setPosition(i*64, GROUND - j*64);
-                    if(i%2==0 == j%2==0)
-                        rect.setFillColor(sf::Color(100,100,100));
-                    else
-                        rect.setFillColor(sf::Color(150,150,150));
-                    window.draw(rect);
-                }
+                // else{
+                //     sf::RectangleShape rect(sf::Vector2f(64, 64));
+                //     rect.setPosition(i*64, GROUND - j*64);
+                //     if(i%2==0 == j%2==0)
+                //         rect.setFillColor(sf::Color(100,100,100));
+                //     else
+                //         rect.setFillColor(sf::Color(150,150,150));
+                //     window.draw(rect);
+                // }
             }
         }
 
