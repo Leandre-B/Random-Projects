@@ -15,7 +15,7 @@ void play_game(sf::RenderWindow & window)
 {
     uint GRAVITY = 6000;
     int YSPEED = 0;
-    int XSPEED = 40000;
+    int XSPEED = 800;
     bool jump = false;
     bool onGround = false;
     uint GROUND = 1080;
@@ -53,10 +53,9 @@ void play_game(sf::RenderWindow & window)
         while (window.pollEvent(event))
         {
 
-            if (event.type == sf::Event::Closed or sf::Keyboard::isKeyPressed(sf::Keyboard::P))
+            if (event.type == sf::Event::Closed or (event.key.code == sf::Keyboard::Escape and event.type == sf::Event::KeyReleased))
             {
                 return;
-                exit = true;
             }
             if (event.type == sf::Event::KeyPressed)
             {
@@ -70,8 +69,10 @@ void play_game(sf::RenderWindow & window)
         }
 
         YSPEED +=GRAVITY*dt.asSeconds();
+        if(YSPEED>1200)
+            YSPEED = 1200;
         if(!lost)
-            cube.move(XSPEED*dt.asSeconds()*dt.asSeconds(), YSPEED*dt.asSeconds());
+            cube.move(XSPEED*dt.asSeconds(), YSPEED*dt.asSeconds());
 
         window.clear(sf::Color(255,150,150));
 

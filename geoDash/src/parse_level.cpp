@@ -3,7 +3,7 @@
 Level foo(){
     Level lvl;
 
-    std::ifstream f("../levels/lvl.json");
+    std::ifstream f("../levels/test.json");
     json data = json::parse(f);
     lvl.width = data["width"];
     lvl.height = data["height"];

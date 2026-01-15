@@ -70,7 +70,7 @@ void open_selection(sf::RenderWindow & window)
         while (window.pollEvent(event))
         {
 
-            if (event.type == sf::Event::Closed or sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+            if (event.type == sf::Event::Closed or (event.key.code == sf::Keyboard::Escape and event.type == sf::Event::KeyReleased))
             {
                 std::cout<<"quitting selection menu\n";
                 return;
