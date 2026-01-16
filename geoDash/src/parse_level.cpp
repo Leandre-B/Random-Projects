@@ -21,6 +21,9 @@ Level foo(){
     for (auto& t : data["spikes"]) {
         lvl.game[t[0]][t[1]] = 's';
     }
+    for (auto& t : data["pad_gravite"]) {
+        lvl.game[t[0]][t[1]] = 'g';
+    }
 
     lvl.spawn_coord.first = data["spawn"][0];
     lvl.spawn_coord.second = data["spawn"][1];

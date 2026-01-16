@@ -11,16 +11,29 @@ bool spikeCollision(sf::Sprite & cube, sf::Sprite & spike){
     return hitbox.intersects(cube.getGlobalBounds());
 
 }
+
+bool padCollision(sf::Sprite & cube, sf::Sprite & pad){
+    sf::FloatRect hitbox(
+        pad.getGlobalBounds().left,
+        pad.getGlobalBounds().top  + 63.f,
+        64.f,
+        1.f
+    );
+
+    return hitbox.intersects(cube.getGlobalBounds());
+
+}
+
 void play_game(sf::RenderWindow & window)
 {
-    uint GRAVITY = 7500;
+    int GRAVITY = 7500;
     int YSPEED = 0;
     int XSPEED = 700;
     bool jump = false;
     bool onGround = false;
     uint GROUND = 1080;
     bool lost = false;
-
+    bool hold_jump = false;
     Level plt = foo();
 
 
@@ -32,8 +45,12 @@ void play_game(sf::RenderWindow & window)
 
     sf::Texture textureSpike;
     textureSpike.loadFromFile("../assets/spike.png");
+
     // if (!textureSpike.loadFromFile("../assets/spike.png"))
     //     return EXIT_FAILURE;
+
+    sf::Texture texturePadGravite;
+    texturePadGravite.loadFromFile("../assets/pad_gravite.png");
     //===
 
     sf::Sprite cube(textureCube);
@@ -48,8 +65,10 @@ void play_game(sf::RenderWindow & window)
 
     sf::Event event;
     bool exit = false;
+    int frame=15;
     while (!exit)
     {
+        ++frame;
         sf::Time dt = clock.getElapsedTime();
         clock.restart();
 
@@ -62,35 +81,47 @@ void play_game(sf::RenderWindow & window)
             }
             if (event.type == sf::Event::KeyPressed)
             {
-                if (event.key.code == sf::Keyboard::Space){
-                    if(onGround){
-                        YSPEED = -1650;
-                        onGround = false;
-                    }
-                }
-                else if (event.key.code == sf::Keyboard::R){
+                if (event.key.code == sf::Keyboard::Space)
+                    hold_jump = true;
+
+                if (event.key.code == sf::Keyboard::R){
                     cube.setPosition(plt.spawn_coord.first*64 + 64 , GROUND - plt.spawn_coord.second*64);
                     cube.setRotation(0);
                     camera.setCenter(cube.getPosition().x + 400, GROUND - plt.spawn_coord.second*64);
+                    GRAVITY = 7500;
+                    YSPEED = 0;
                     lost=false;
                 }
             }
+            if (event.type == sf::Event::KeyReleased)
+            {
+                if (event.key.code == sf::Keyboard::Space)
+                    hold_jump = false;
+            }
         }
-
+        if(hold_jump and onGround){
+            if(GRAVITY>0)
+                YSPEED = -1500;
+            else
+                YSPEED = 1500;
+            onGround = false;
+        }
         YSPEED +=GRAVITY*dt.asSeconds();
-        if(YSPEED>900)
+        if(YSPEED>900 and GRAVITY>0)
             YSPEED = 900;
+        else if (YSPEED<-1400 and GRAVITY<0)
+            YSPEED = -1400;
         if(!lost){
             cube.move(XSPEED*dt.asSeconds(), YSPEED*dt.asSeconds());
             if(!onGround)
                 cube.rotate(300*dt.asSeconds());
             else{
                 int rota = int (cube.getRotation())%360;
-                if(rota>= 45 and rota<135)
+                if(rota>= 25 and rota<115)
                     cube.setRotation(90);
-                else if(rota>= 135 and rota<225)
+                else if(rota>= 115 and rota<205)
                     cube.setRotation(180);
-                else if(rota>= 225 and rota<315)
+                else if(rota>= 205 and rota<295)
                     cube.setRotation(270);
                 else
                     cube.setRotation(0);
@@ -124,37 +155,67 @@ void play_game(sf::RenderWindow & window)
                     if(rect.getGlobalBounds().intersects(cube.getGlobalBounds())){
                         //si le joueurs (cube) est au dessus du bloc
                         if(rect.getGlobalBounds().top >=
-                            (cube.getGlobalBounds().top +40))
+                            (cube.getGlobalBounds().top +40) and GRAVITY>0)
                         {
                             cube.setPosition(cube.getPosition().x, rect.getGlobalBounds().top - 32);
                             YSPEED = 0;
                             onGround = true;
 
-                        //sinon perdu
-                        }else if(cube.getGlobalBounds().top != rect.getGlobalBounds().top + 64){
+                        }
+                        else if(rect.getGlobalBounds().top <=
+                            (cube.getGlobalBounds().top +44) and GRAVITY<0)
+                        {
+                            cube.setPosition(cube.getPosition().x, rect.getGlobalBounds().top + 64 +32);
+                            YSPEED = 0;
+                            onGround = true;
+
+                        }
+                        else if(cube.getGlobalBounds().top != rect.getGlobalBounds().top + 64){
                             lost  = true;
                         }
                     }
                 }
+                else if(plt.game[i][j]=='g')
+                {
+                    sf::Sprite pad_gravite(texturePadGravite);
+                    pad_gravite.setScale(2,2);
+                    pad_gravite.setPosition(i*64, GROUND - j*64);
+                    window.draw(pad_gravite);
+                    if(frame>10 and padCollision(pad_gravite,cube)){
+                        GRAVITY *= -1;
+                        if(GRAVITY<0)
+                            cube.move(0, -20);
+                        else
+                            cube.move(0, 20);
+                        frame = 0;
+                    }
+                }
             }
         }
-        if(GROUND/64 - cube.getGlobalBounds().top/64 >0)
-            if((plt.game[cube.getGlobalBounds().left/64][GROUND/64 - cube.getGlobalBounds().top/64]=='b') or (plt.game[(cube.getGlobalBounds().left/64) +1][GROUND/64 - cube.getGlobalBounds().top/64]=='b'))
-                onGround = true;
-            else
-                onGround = false;
-        else
+        if(GROUND/64 - cube.getGlobalBounds().top/64 >0){
+            if(GRAVITY>=0){
+                if((plt.game[cube.getGlobalBounds().left/64][GROUND/64 - cube.getGlobalBounds().top/64]=='b') or (plt.game[(cube.getGlobalBounds().left/64) +1][GROUND/64 - cube.getGlobalBounds().top/64]=='b'))
+                    onGround = true;
+                else
+                    onGround = false;
+            }else{
+                if((plt.game[cube.getGlobalBounds().left/64][GROUND/64 - cube.getGlobalBounds().top/64 +2]=='b') or (plt.game[(cube.getGlobalBounds().left/64) +1][GROUND/64 - cube.getGlobalBounds().top/64 +2]=='b'))
+                    onGround = true;
+                else
+                    onGround = false;
+            }
+        }else
             lost = true;
 
         if(cube.getPosition().y < camera.getCenter().y -150)
         {
             camera.setCenter(cube.getPosition().x + 400, camera.getCenter().y);
-            camera.move(0, -250*dt.asSeconds());
+            camera.move(0, -500*dt.asSeconds());
         }
         else if(cube.getPosition().y > camera.getCenter().y + 150 and !onGround)
         {
             camera.setCenter(cube.getPosition().x + 400, camera.getCenter().y);
-            camera.move(0, 500*dt.asSeconds());
+            camera.move(0, 700*dt.asSeconds());
         }
         else
             camera.setCenter(cube.getPosition().x + 400, camera.getCenter().y);

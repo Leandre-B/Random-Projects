@@ -11,12 +11,15 @@ void save(const Level & level) {
 
     std::vector<std::vector<int>> blocks;
     std::vector<std::vector<int>> spikes;
+    std::vector<std::vector<int>> pad_gravite;
     for(int i=0; i<level.width; ++i){
         for(int j=0; j<level.height; ++j){
             if(level.game[i][j]=='b')
                 blocks.push_back({i, j});
-            if(level.game[i][j]=='s')
+            else if(level.game[i][j]=='s')
                 spikes.push_back({i, j});
+            else if(level.game[i][j]=='g')
+                pad_gravite.push_back({i, j});
         }
     }
 
@@ -25,6 +28,7 @@ void save(const Level & level) {
     data["spawn"]  = {0, 1};
     data["blocks"] = blocks;
     data["spikes"] = spikes;
+    data["pad_gravite"] = pad_gravite;
 
     // On écrit dans le fichier
     std::ofstream out("../levels/test.json");
@@ -56,6 +60,9 @@ void editeur(sf::RenderWindow & window)
 
     sf::Texture textureSpike;
     textureSpike.loadFromFile("../assets/spike.png");
+
+    sf::Texture texturePadGravite;
+    texturePadGravite.loadFromFile("../assets/pad_gravite.png");
 
     sf::Clock clock;
     while (window.isOpen())
@@ -101,6 +108,13 @@ void editeur(sf::RenderWindow & window)
                 if(i>=0 and j>=0 and i<level.width and j<level.height)
                     level.game[i][j]='n';
             }
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::G))
+            {
+                int i = window.mapPixelToCoords(sf::Mouse::getPosition(window)).x/64;
+                int j = GROUND/64 - window.mapPixelToCoords(sf::Mouse::getPosition(window)).y/64 +2;
+                if(i>=0 and j>=0 and i<level.width and j<level.height)
+                    level.game[i][j]='g';
+            }
             if (sf::Keyboard::isKeyPressed(sf::Keyboard::M))
             {
                 save(level);
@@ -125,6 +139,13 @@ void editeur(sf::RenderWindow & window)
                     rect.setPosition(i*64, GROUND - j*64);
                     rect.setFillColor(sf::Color(255,150,255));
                     window.draw(rect);
+                }
+                else if(level.game[i][j]=='g')
+                {
+                    sf::Sprite pad_gravite(texturePadGravite);
+                    pad_gravite.setScale(2,2);
+                    pad_gravite.setPosition(i*64, GROUND - j*64);
+                    window.draw(pad_gravite);
                 }
                 // else{
                 //     sf::RectangleShape rect(sf::Vector2f(64, 64));
