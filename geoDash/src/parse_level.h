@@ -8,7 +8,7 @@
 using json = nlohmann::ordered_json;
 
 struct Level{
-    std::vector<std::vector<char>> game;
+    std::vector<std::vector<std::string>> game;
     uint width = 0;
     uint height = 0;
     std::pair<uint, uint> spawn_coord;
