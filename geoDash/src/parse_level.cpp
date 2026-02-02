@@ -21,6 +21,9 @@ Level foo(){
     for (auto& t : data["spikes"]) {
         lvl.game[t[0]][t[1]] = "s";
     }
+    for (auto& t : data["spikes_reverse"]) {
+        lvl.game[t[0]][t[1]] = "s_r";
+    }
     for (auto& t : data["pad_gravite"]) {
         lvl.game[t[0]][t[1]] = "g";
     }

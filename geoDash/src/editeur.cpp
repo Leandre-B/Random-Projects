@@ -5,7 +5,7 @@
 #include <nlohmann/json.hpp>
 
 enum Deplacement {up, down, right, left, stay};
-enum PickedItem {Spike, Gravity,GravityReverse, Block, Player};
+enum PickedItem {Spike, SpikeReverse, Gravity,GravityReverse, Block, Player};
 
 void save(const Level & level) {
     json data;
@@ -14,6 +14,7 @@ void save(const Level & level) {
 
     std::vector<std::vector<int>> blocks;
     std::vector<std::vector<int>> spikes;
+    std::vector<std::vector<int>> spikes_reverse;
     std::vector<std::vector<int>> pad_gravite;
     std::vector<std::vector<int>> pad_gravite_reverse;
     for(int i=0; i<level.width; ++i){
@@ -22,6 +23,8 @@ void save(const Level & level) {
                 blocks.push_back({i, j});
             else if(level.game[i][j]=="s")
                 spikes.push_back({i, j});
+            else if(level.game[i][j]=="s_r")
+                spikes_reverse.push_back({i, j});
             else if(level.game[i][j]=="g")
                 pad_gravite.push_back({i, j});
             else if(level.game[i][j]=="g_r")
@@ -35,6 +38,7 @@ void save(const Level & level) {
     data["width"]  = level.width;
     data["blocks"] = blocks;
     data["spikes"] = spikes;
+    data["spikes_reverse"] = spikes_reverse;
     data["pad_gravite"] = pad_gravite;
     data["pad_gravite_reverse"] = pad_gravite_reverse;
 
@@ -55,11 +59,12 @@ void editeur(sf::RenderWindow & window)
     PickedItem item = Block;
     Deplacement deplacement = stay;
 
-    uint GROUND = 1080;
     Level level = foo();
     level.game[level.spawn_coord.first][level.spawn_coord.second] = 'p';
     level.width = 1000;
-    level.height=100;
+    level.height=50;
+
+    uint GROUND = 64*level.height;
 
     sf::Font font;
     font.loadFromFile("../assets/MapleMono-Regular.ttf");
@@ -75,6 +80,11 @@ void editeur(sf::RenderWindow & window)
     textureSpike.loadFromFile("../assets/spike.png");
     sf::Sprite spike(textureSpike);
     spike.setScale(2,2);
+
+    sf::Texture textureSpikeReverse;
+    textureSpikeReverse.loadFromFile("../assets/spike_reverse.png");
+    sf::Sprite spike_reverse(textureSpikeReverse);
+    spike_reverse.setScale(2,2);
 
     sf::Texture texturePlayer;
     texturePlayer.loadFromFile("../assets/cube.png");
@@ -132,6 +142,8 @@ void editeur(sf::RenderWindow & window)
                     std::cout<<"Clique palette\n";
                     if(spike.getGlobalBounds().contains(mousePos))
                         item = Spike;
+                    if(spike_reverse.getGlobalBounds().contains(mousePos))
+                        item = SpikeReverse;
                     else if(pad_gravite.getGlobalBounds().contains(mousePos))
                         item = Gravity;
                     else if (pad_gravite_reverse.getGlobalBounds().contains(mousePos))
@@ -144,16 +156,21 @@ void editeur(sf::RenderWindow & window)
                 else
                 {
                     int i = window.mapPixelToCoords(sf::Mouse::getPosition(window)).x/64;
-                    int j = GROUND/64 - window.mapPixelToCoords(sf::Mouse::getPosition(window)).y/64 +2;
-
+                    int j = GROUND/64 - window.mapPixelToCoords(sf::Mouse::getPosition(window)).y/64 +1;
+                    std::cout<<i<<" "<<j<<std::endl;
                     if(i>=0 and j>=0 and i<level.width and j<level.height)
                     {
+                        std::cout<<"place : "<<i<<" "<<j<<std::endl;
                         switch(item){
                             case Block :
                                 level.game[i][j]="b";
+                                std::cout<<"place block in "<<i<<" "<<j<<std::endl;
                                 break;
                             case Spike :
                                 level.game[i][j]="s";
+                                break;
+                            case SpikeReverse :
+                                level.game[i][j]="s_r";
                                 break;
                             case Gravity :
                                 level.game[i][j]="g";
@@ -180,7 +197,7 @@ void editeur(sf::RenderWindow & window)
             if (sf::Mouse::isButtonPressed(sf::Mouse::Right))
             {
                 int i = window.mapPixelToCoords(sf::Mouse::getPosition(window)).x/64;
-                int j = GROUND/64 - window.mapPixelToCoords(sf::Mouse::getPosition(window)).y/64 +2;
+                int j = GROUND/64 - window.mapPixelToCoords(sf::Mouse::getPosition(window)).y/64 +1;
                 if(i>=0 and j>=0 and i<level.width and j<level.height)
                     level.game[i][j]="n";
             }
@@ -194,16 +211,16 @@ void editeur(sf::RenderWindow & window)
 
         switch(deplacement){
             case up :
-                camera.move(0, -int(1000*dt.asSeconds()));
+                camera.move(0, -int(6000*dt.asSeconds()));
                 break;
             case down :
-                camera.move(0, int(1000*dt.asSeconds()));
+                camera.move(0, int(6000*dt.asSeconds()));
                 break;
             case right :
-                camera.move(int(1000*dt.asSeconds()), 0);
+                camera.move(int(6000*dt.asSeconds()), 0);
                 break;
             case left :
-                camera.move(int(-1000*dt.asSeconds()), 0);
+                camera.move(int(-6000*dt.asSeconds()), 0);
                 break;
             default:
                 //ne bouge pas
@@ -220,6 +237,11 @@ void editeur(sf::RenderWindow & window)
                 {
                     spike.setPosition(i*64, GROUND - j*64);
                     window.draw(spike);
+                }
+                else if(level.game[i][j]=="s_r")
+                {
+                    spike_reverse.setPosition(i*64, GROUND - j*64);
+                    window.draw(spike_reverse);
                 }
                 else if(level.game[i][j]=="b")
                 {
@@ -251,14 +273,16 @@ void editeur(sf::RenderWindow & window)
 
         bgPalette.setPosition(leftPal ,topPal);
         spike.setPosition(leftPal + 100, topPal+10);
-        pad_gravite.setPosition(leftPal + 300, topPal);
+        spike_reverse.setPosition(leftPal + 300, topPal+10);
         block.setPosition(leftPal + 500, topPal+10);
         player.setPosition(leftPal + 700, topPal+10);
-        pad_gravite_reverse.setPosition(leftPal + 900, topPal+10);
+        pad_gravite.setPosition(leftPal + 900, topPal);
+        pad_gravite_reverse.setPosition(leftPal + 1100, topPal+10);
 
         window.draw(bgPalette);
         window.draw(player);
         window.draw(spike);
+        window.draw(spike_reverse);
         window.draw(pad_gravite);
         window.draw(pad_gravite_reverse);
         window.draw(block);

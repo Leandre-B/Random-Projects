@@ -12,12 +12,24 @@ bool spikeCollision(sf::FloatRect & hitboxCube, sf::Sprite & spike){
 
 }
 
+bool spikeReverseCollision(sf::FloatRect & hitboxCube, sf::Sprite & spike){
+    sf::FloatRect hitbox(
+        spike.getGlobalBounds().left + 27.f,
+        spike.getGlobalBounds().top  + 5.f,
+        10.f,
+        30.f
+    );
+
+    return hitbox.intersects(hitboxCube);
+
+}
+
 bool padCollision(sf::FloatRect & hitboxCube, sf::Sprite & pad){
     sf::FloatRect hitbox(
         pad.getGlobalBounds().left,
-        pad.getGlobalBounds().top  + 63.f,
+        pad.getGlobalBounds().top  + 55.f,
         64.f,
-        1.f
+        6.f
     );
 
     return hitbox.intersects(hitboxCube);
@@ -29,7 +41,7 @@ bool padCollisionGraviteReverse(sf::FloatRect & hitboxCube, sf::Sprite & pad){
         pad.getGlobalBounds().left,
                          pad.getGlobalBounds().top,
                          64.f,
-                         1.f
+                         6.f
     );
 
     return hitbox.intersects(hitboxCube);
@@ -38,25 +50,27 @@ bool padCollisionGraviteReverse(sf::FloatRect & hitboxCube, sf::Sprite & pad){
 
 void play_game(sf::RenderWindow & window)
 {
-    int GRAVITY = 8000;
+    int GRAVITY = 7000;
     int YSPEED = 0;
     int XSPEED = 700;
     bool jump = false;
     bool onGround = false;
-    uint GROUND = 1080;
     bool lost = false;
     bool hold_jump = false;
+    bool follow_up = false, follow_down = false;
     Level plt = foo();
-
+    uint GROUND = 64*plt.height;
 
     //== TEXTURES ==
     sf::Texture textureCube;
     textureCube.loadFromFile("../assets/cube.png");
-    // if (!textureCube.loadFromFile("../assets/cube.png"))
-    //     return EXIT_FAILURE;
 
     sf::Texture textureSpike;
     textureSpike.loadFromFile("../assets/spike.png");
+
+
+    sf::Texture textureSpikeReverse;
+    textureSpikeReverse.loadFromFile("../assets/spike_reverse.png");
 
     // if (!textureSpike.loadFromFile("../assets/spike.png"))
     //     return EXIT_FAILURE;
@@ -85,10 +99,25 @@ void play_game(sf::RenderWindow & window)
     sf::Event event;
     bool exit = false;
     int frame=15;
+
+    float time=0;
+
+    sf::Font font;
+    font.loadFromFile("../assets/MapleMono-Regular.ttf");
+    sf::Text txt_fps("0", font, 40);
     while (!exit)
     {
-        if(lost)
-            std::cout<<"lost\n";
+        if(lost){
+            cube.setPosition(plt.spawn_coord.first*64 + 64 , GROUND - plt.spawn_coord.second*64);
+            cube.setRotation(0);
+            camera.setCenter(cube.getPosition().x + 400, GROUND - plt.spawn_coord.second*64);
+            GRAVITY = 7500;
+            YSPEED = 0;
+            hitboxCube.left = cube.getPosition().x -32;
+            hitboxCube.top  = cube.getPosition().y -32;
+            lost=false;
+            time=0;
+        }
         ++frame;
         sf::Time dt = clock.getElapsedTime();
         clock.restart();
@@ -130,8 +159,8 @@ void play_game(sf::RenderWindow & window)
             onGround = false;
         }
         YSPEED +=GRAVITY*dt.asSeconds();
-        if(YSPEED>900 and GRAVITY>0)
-            YSPEED = 900;
+        if(YSPEED>1000 and GRAVITY>0)
+            YSPEED = 1000;
         else if (YSPEED<-1400 and GRAVITY<0)
             YSPEED = -1400;
         if(!lost){
@@ -153,19 +182,35 @@ void play_game(sf::RenderWindow & window)
         hitboxCube.left = cube.getPosition().x -32;
         hitboxCube.top  = cube.getPosition().y -32;
 
-
-        window.clear(sf::Color(255,150,150));
+        if(hitboxCube.left>24.5*plt.width)
+            window.clear(sf::Color(0,0,0));
+        else
+            window.clear(sf::Color(255,150,150));
 
 
          for(int i=0; i<plt.width; ++i){
             for(int j=0; j<plt.height; ++j){
                 if(plt.game[i][j]=="s")
                 {
+
                     sf::Sprite spike(textureSpike);
                     spike.setScale(2,2);
                     spike.setPosition(i*64, GROUND - j*64);
                     window.draw(spike);
+
                     if(spikeCollision(hitboxCube, spike)){
+                        lost = true;
+
+                    }
+                }
+                else if(plt.game[i][j]=="s_r")
+                {
+                    sf::Sprite spikeReverse(textureSpikeReverse);
+                    spikeReverse.setScale(2,2);
+                    spikeReverse.setPosition(i*64, GROUND - j*64);
+                    window.draw(spikeReverse);
+
+                    if(spikeReverseCollision(hitboxCube, spikeReverse)){
                         lost = true;
 
                     }
@@ -188,7 +233,7 @@ void play_game(sf::RenderWindow & window)
                             onGround = true;
 
                         }
-                        else if(rect.getGlobalBounds().top <=
+                        else if((rect.getGlobalBounds().top +64) <=
                             (hitboxCube.top +44) and GRAVITY<0)
                         {
                             cube.setPosition(cube.getPosition().x, rect.getGlobalBounds().top + 64 +32);
@@ -196,7 +241,7 @@ void play_game(sf::RenderWindow & window)
                             onGround = true;
 
                         }
-                        else if(frame>10 and    hitboxCube.top != rect.getGlobalBounds().top + 64){
+                        else if(frame>5 and hitboxCube.top != rect.getGlobalBounds().top + 64){
                             lost  = true;
                         }
                     }
@@ -207,8 +252,9 @@ void play_game(sf::RenderWindow & window)
                     pad_gravite.setScale(2,2);
                     pad_gravite.setPosition(i*64, GROUND - j*64);
                     window.draw(pad_gravite);
-                    if(frame>25 and padCollision(hitboxCube, pad_gravite)){
+                    if(frame>15 and padCollision(hitboxCube, pad_gravite)){
                         GRAVITY *= -1;
+                        YSPEED  *= -1;
                         frame = 0;
                     }
                 }
@@ -218,8 +264,9 @@ void play_game(sf::RenderWindow & window)
                     pad_gravite.setScale(2,2);
                     pad_gravite.setPosition(i*64, GROUND - j*64);
                     window.draw(pad_gravite);
-                    if(frame>25 and padCollisionGraviteReverse(hitboxCube, pad_gravite)){
+                    if(frame>15 and padCollisionGraviteReverse(hitboxCube, pad_gravite)){
                         GRAVITY *= -1;
+                        YSPEED  *= -1;
                         frame = 0;
                     }
                 }
@@ -232,7 +279,7 @@ void play_game(sf::RenderWindow & window)
                 else
                     onGround = false;
             }else{
-                if((plt.game[hitboxCube.left/64][GROUND/64 - hitboxCube.top/64 +2]=="b") or (plt.game[(hitboxCube.left/64) +1][GROUND/64 - hitboxCube.top/64 +2]=="b"))
+                if((plt.game[hitboxCube.left/64][GROUND/64 - hitboxCube.top/64 +1]=="b") or (plt.game[(hitboxCube.left/64) +1][GROUND/64 - hitboxCube.top/64 +1]=="b"))
                     onGround = true;
                 else
                     onGround = false;
@@ -240,17 +287,21 @@ void play_game(sf::RenderWindow & window)
         }else
             lost = true;
 
-        if(cube.getPosition().y < camera.getCenter().y -200)
-        {
+
+        if(follow_up or cube.getPosition().y < camera.getCenter().y -200){
+            follow_up=true;
             camera.setCenter(cube.getPosition().x + 400, camera.getCenter().y);
-            camera.move(0, -400*dt.asSeconds());
+            camera.move(0, -850*dt.asSeconds());
+            if(cube.getPosition().y < camera.getCenter().y -50)
+                follow_up=false;
         }
-        else if(cube.getPosition().y > camera.getCenter().y + 200 and !onGround)
-        {
+        else if(follow_down or cube.getPosition().y > camera.getCenter().y + 200){
+            follow_down=true;
             camera.setCenter(cube.getPosition().x + 400, camera.getCenter().y);
-            camera.move(0, 400*dt.asSeconds());
-        }
-        else
+            camera.move(0, 850*dt.asSeconds());
+            if(cube.getPosition().y > camera.getCenter().y + 50)
+                follow_down=false;
+        }else
             camera.setCenter(cube.getPosition().x + 400, camera.getCenter().y);
 
         window.setView(camera);
@@ -261,9 +312,14 @@ void play_game(sf::RenderWindow & window)
         hitboxDebug.setFillColor(sf::Color::Transparent);
         hitboxDebug.setOutlineColor(sf::Color::Blue);
         hitboxDebug.setOutlineThickness(2.f);
-
         window.draw(hitboxDebug);
+
         window.draw(cube);
+        time+=dt.asSeconds();
+        txt_fps.setString(std::to_string(time));
+        txt_fps.setPosition(camera.getCenter().x -700, camera.getCenter().y-500);
+        window.draw(txt_fps);
+
         window.display();
     }
 }
