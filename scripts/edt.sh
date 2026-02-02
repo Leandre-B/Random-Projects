@@ -197,7 +197,7 @@ printf "\e[1;31m" #color
 for (( k=0 ; k<(( ${#subject[$longest]} + ${#timetable_start[$longest]} + ${#timetable_end[$longest]} + 13 )) ; ++k));do
     printf "-"
 done
-
+echo
 # Loop trougth subject
 for (( i=0 ; i<${#subject[@]} ; i++ ));do
 
@@ -208,8 +208,14 @@ for (( i=0 ; i<${#subject[@]} ; i++ ));do
     start_time=$(cut -d ' ' -f2 <<< "${timetable_start[$i]}")
     end_time=$(cut -d ' ' -f2 <<< "${timetable_end[$i]}")
 
+    if [[ $i -lt $(( ${#subject[@]} -1 ))  ]];then
+        next_day=$(cut -d '/' -f1 <<< "${timetable_start[$(($i+1))]}")
+    else
+        next_day=$day
+    fi
+
     # Newline with color
-    printf "\n|\e[1;33m ${subject[$i]}"
+    printf "|\e[1;33m ${subject[$i]}"
 
     #fill with space for better formating
     for (( k=${#subject[$i]} ; k<${#subject[$longest]} ; ++k));do
@@ -221,10 +227,17 @@ for (( i=0 ; i<${#subject[@]} ; i++ ));do
     printf "\e[1;31m | \e[1;34m $d ->\e[1;34m $end_time \e[1;31m\n"
 
     # Same as the other on above
-    for (( k=0 ; k<(( ${#subject[$longest]} + ${#timetable_start[$longest]} + ${#timetable_end[$longest]} + 13 )) ; ++k));do
-        printf "-"
-    done
+    if [[ $day != $next_day ]];then
+        for (( k=0 ; k<(( ${#subject[$longest]} + ${#timetable_start[$longest]} + ${#timetable_end[$longest]} + 13 )) ; ++k));do
+            printf "-"
+        done
+        echo
+    fi
 
+done
+
+for (( k=0 ; k<(( ${#subject[$longest]} + ${#timetable_start[$longest]} + ${#timetable_end[$longest]} + 13 )) ; ++k));do
+    printf "-"
 done
 
 # Set colors to default
