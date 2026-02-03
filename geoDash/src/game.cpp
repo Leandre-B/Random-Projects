@@ -50,14 +50,13 @@ bool padCollisionGraviteReverse(sf::FloatRect & hitboxCube, sf::Sprite & pad){
 
 void play_game(sf::RenderWindow & window)
 {
-    int GRAVITY = 7000;
+    int GRAVITY = 7040;
     int YSPEED = 0;
-    int XSPEED = 700;
+    int XSPEED = 704;
     bool jump = false;
     bool onGround = false;
     bool lost = false;
     bool hold_jump = false;
-    bool follow_up = false, follow_down = false;
     Level plt = foo();
     uint GROUND = 64*plt.height;
 
@@ -164,7 +163,7 @@ void play_game(sf::RenderWindow & window)
         else if (YSPEED<-1400 and GRAVITY<0)
             YSPEED = -1400;
         if(!lost){
-            cube.move(XSPEED*dt.asSeconds(), YSPEED*dt.asSeconds());
+            cube.move(int(XSPEED*dt.asSeconds()), int(YSPEED*dt.asSeconds()));
             if(!onGround)
                 cube.rotate(300*dt.asSeconds());
             else{
@@ -182,7 +181,9 @@ void play_game(sf::RenderWindow & window)
         hitboxCube.left = cube.getPosition().x -32;
         hitboxCube.top  = cube.getPosition().y -32;
 
-        if(hitboxCube.left>24.5*plt.width)
+        if (hitboxCube.left>38*plt.width)
+            window.clear(sf::Color(150,10,75));
+        else if(hitboxCube.left>24.5*plt.width)
             window.clear(sf::Color(0,0,0));
         else
             window.clear(sf::Color(255,150,150));
@@ -228,7 +229,7 @@ void play_game(sf::RenderWindow & window)
                         if(rect.getGlobalBounds().top >=
                             (hitboxCube.top +40 ) and GRAVITY>0)
                         {
-                            cube.setPosition(cube.getPosition().x, rect.getGlobalBounds().top - 32);
+                            cube.setPosition(int(cube.getPosition().x), int(rect.getGlobalBounds().top - 32));
                             YSPEED = 0;
                             onGround = true;
 
@@ -236,7 +237,7 @@ void play_game(sf::RenderWindow & window)
                         else if((rect.getGlobalBounds().top +64) <=
                             (hitboxCube.top +44) and GRAVITY<0)
                         {
-                            cube.setPosition(cube.getPosition().x, rect.getGlobalBounds().top + 64 +32);
+                            cube.setPosition(int(cube.getPosition().x), int(rect.getGlobalBounds().top + 64 +32));
                             YSPEED = 0;
                             onGround = true;
 
@@ -287,36 +288,28 @@ void play_game(sf::RenderWindow & window)
         }else
             lost = true;
 
-
-        if(follow_up or cube.getPosition().y < camera.getCenter().y -200){
-            follow_up=true;
-            camera.setCenter(cube.getPosition().x + 400, camera.getCenter().y);
-            camera.move(0, -850*dt.asSeconds());
-            if(cube.getPosition().y < camera.getCenter().y -50)
-                follow_up=false;
+        camera.setCenter((cube.getPosition().x + 400), (camera.getCenter().y));
+        if(cube.getPosition().y < camera.getCenter().y -200){
+            camera.move(0, -(850*dt.asSeconds()));
         }
-        else if(follow_down or cube.getPosition().y > camera.getCenter().y + 200){
-            follow_down=true;
-            camera.setCenter(cube.getPosition().x + 400, camera.getCenter().y);
-            camera.move(0, 850*dt.asSeconds());
-            if(cube.getPosition().y > camera.getCenter().y + 50)
-                follow_down=false;
-        }else
-            camera.setCenter(cube.getPosition().x + 400, camera.getCenter().y);
-
+        if(cube.getPosition().y > camera.getCenter().y + 200){
+            camera.move(0, (850*dt.asSeconds()));
+        }
         window.setView(camera);
 
-        sf::RectangleShape hitboxDebug;
-        hitboxDebug.setPosition(hitboxCube.left, hitboxCube.top);
-        hitboxDebug.setSize({hitboxCube.width, hitboxCube.height});
-        hitboxDebug.setFillColor(sf::Color::Transparent);
-        hitboxDebug.setOutlineColor(sf::Color::Blue);
-        hitboxDebug.setOutlineThickness(2.f);
-        window.draw(hitboxDebug);
+
+
+        // sf::RectangleShape hitboxDebug;
+        // hitboxDebug.setPosition(hitboxCube.left, hitboxCube.top);
+        // hitboxDebug.setSize({hitboxCube.width, hitboxCube.height});
+        // hitboxDebug.setFillColor(sf::Color::Transparent);
+        // hitboxDebug.setOutlineColor(sf::Color::Blue);
+        // hitboxDebug.setOutlineThickness(2.f);
+        // window.draw(hitboxDebug);
 
         window.draw(cube);
         time+=dt.asSeconds();
-        txt_fps.setString(std::to_string(time));
+        txt_fps.setString(std::to_string(1/dt.asSeconds()));
         txt_fps.setPosition(camera.getCenter().x -700, camera.getCenter().y-500);
         window.draw(txt_fps);
 

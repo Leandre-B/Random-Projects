@@ -10,6 +10,7 @@ int main()
 {
     Fenetre fenetre  = menu;
     auto window = sf::RenderWindow({1200u, 800u}, "CMake SFML Project",sf::Style::Fullscreen);
+    window.setVerticalSyncEnabled(false);
     window.setFramerateLimit(60);
 
     sf::Font font;

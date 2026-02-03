@@ -5,7 +5,7 @@
 #include <nlohmann/json.hpp>
 
 enum Deplacement {up, down, right, left, stay};
-enum PickedItem {Spike, SpikeReverse, Gravity,GravityReverse, Block, Player};
+enum PickedItem {Spike, SpikeReverse, Gravity,GravityReverse, Block, Player, End};
 
 void save(const Level & level) {
     json data;
@@ -31,6 +31,8 @@ void save(const Level & level) {
                 pad_gravite_reverse.push_back({i, j});
             else if(level.game[i][j]=="p")
                 data["spawn"]  = {i, j};
+            else if(level.game[i][j]=="end")
+                data["end"]  = {i, j};
         }
     }
 
@@ -101,6 +103,11 @@ void editeur(sf::RenderWindow & window)
     sf::Sprite pad_gravite_reverse(texturePadGraviteReverse);
     pad_gravite_reverse.setScale(2,2);
 
+    sf::Texture textureEnd;
+    textureEnd.loadFromFile("../assets/end.png");
+    sf::Sprite end(textureEnd);
+    end.setScale(2,2);
+
     sf::RectangleShape block(sf::Vector2f(64, 64));
     block.setFillColor(sf::Color(255,150,255));
 
@@ -152,6 +159,8 @@ void editeur(sf::RenderWindow & window)
                         item =  Block;
                     else if(player.getGlobalBounds().contains(mousePos))
                         item =  Player;
+                    else if(end.getGlobalBounds().contains(mousePos))
+                        item =  End;
                 }
                 else
                 {
@@ -186,6 +195,10 @@ void editeur(sf::RenderWindow & window)
                                     }
                                 }
                                 level.game[i][j]="p";
+                                break;
+
+                            case End :
+                                level.game[i][j]="end";
                                 break;
 
                             default :
@@ -263,6 +276,11 @@ void editeur(sf::RenderWindow & window)
                     player.setPosition(i*64, GROUND - j*64);
                     window.draw(player);
                 }
+                else if(level.game[i][j]=="end")
+                {
+                    end.setPosition(i*64, GROUND - j*64);
+                    window.draw(end);
+                }
             }
         }
         //=======================
@@ -278,6 +296,7 @@ void editeur(sf::RenderWindow & window)
         player.setPosition(leftPal + 700, topPal+10);
         pad_gravite.setPosition(leftPal + 900, topPal);
         pad_gravite_reverse.setPosition(leftPal + 1100, topPal+10);
+        end.setPosition(leftPal + 1200, topPal+10);
 
         window.draw(bgPalette);
         window.draw(player);
@@ -286,6 +305,7 @@ void editeur(sf::RenderWindow & window)
         window.draw(pad_gravite);
         window.draw(pad_gravite_reverse);
         window.draw(block);
+        window.draw(end);
         //=======================
 
 
