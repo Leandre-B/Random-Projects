@@ -163,11 +163,11 @@ void play_game(sf::RenderWindow & window)
         else if (YSPEED<-1400 and GRAVITY<0)
             YSPEED = -1400;
         if(!lost){
-            cube.move(int(XSPEED*dt.asSeconds()), int(YSPEED*dt.asSeconds()));
+            cube.move((XSPEED*dt.asSeconds()), (YSPEED*dt.asSeconds()));
             if(!onGround)
                 cube.rotate(300*dt.asSeconds());
             else{
-                int rota = int (cube.getRotation())%360;
+                int rota =  int(cube.getRotation())%360;
                 if(rota>= 25 and rota<115)
                     cube.setRotation(90);
                 else if(rota>= 115 and rota<205)
@@ -188,6 +188,14 @@ void play_game(sf::RenderWindow & window)
         else
             window.clear(sf::Color(255,150,150));
 
+        camera.setCenter((cube.getPosition().x + 400), (camera.getCenter().y));
+        if(cube.getPosition().y < camera.getCenter().y -200){
+            camera.move(0, -(850*dt.asSeconds()));
+        }
+        if(cube.getPosition().y > camera.getCenter().y + 200){
+            camera.move(0, (850*dt.asSeconds()));
+        }
+        window.setView(camera);
 
          for(int i=0; i<plt.width; ++i){
             for(int j=0; j<plt.height; ++j){
@@ -229,7 +237,7 @@ void play_game(sf::RenderWindow & window)
                         if(rect.getGlobalBounds().top >=
                             (hitboxCube.top +40 ) and GRAVITY>0)
                         {
-                            cube.setPosition(int(cube.getPosition().x), int(rect.getGlobalBounds().top - 32));
+                            cube.setPosition((cube.getPosition().x), (rect.getGlobalBounds().top - 32));
                             YSPEED = 0;
                             onGround = true;
 
@@ -237,7 +245,7 @@ void play_game(sf::RenderWindow & window)
                         else if((rect.getGlobalBounds().top +64) <=
                             (hitboxCube.top +44) and GRAVITY<0)
                         {
-                            cube.setPosition(int(cube.getPosition().x), int(rect.getGlobalBounds().top + 64 +32));
+                            cube.setPosition((cube.getPosition().x), (rect.getGlobalBounds().top + 64 +32));
                             YSPEED = 0;
                             onGround = true;
 
@@ -287,25 +295,7 @@ void play_game(sf::RenderWindow & window)
             }
         }else
             lost = true;
-
-        camera.setCenter((cube.getPosition().x + 400), (camera.getCenter().y));
-        if(cube.getPosition().y < camera.getCenter().y -200){
-            camera.move(0, -(850*dt.asSeconds()));
-        }
-        if(cube.getPosition().y > camera.getCenter().y + 200){
-            camera.move(0, (850*dt.asSeconds()));
-        }
-        window.setView(camera);
-
-
-
-        // sf::RectangleShape hitboxDebug;
-        // hitboxDebug.setPosition(hitboxCube.left, hitboxCube.top);
-        // hitboxDebug.setSize({hitboxCube.width, hitboxCube.height});
-        // hitboxDebug.setFillColor(sf::Color::Transparent);
-        // hitboxDebug.setOutlineColor(sf::Color::Blue);
-        // hitboxDebug.setOutlineThickness(2.f);
-        // window.draw(hitboxDebug);
+        
 
         window.draw(cube);
         time+=dt.asSeconds();
