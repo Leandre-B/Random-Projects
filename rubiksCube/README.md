@@ -2,11 +2,11 @@
 Implémentation simple d'un rubik's cube 3D avec OpenGL.
 Créé en suivant le tuto de learnopengl.com/
 
-Utilise openGL et glfw3 3.4
+## Dependances :  
+OpenGL et glfw3 3.4
 
 ## Build :  
 ``` console
-cd rubiksCube  
 mkdir build  
 cd build  
 cmake ..  

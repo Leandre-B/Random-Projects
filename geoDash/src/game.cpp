@@ -92,8 +92,8 @@ void play_game(sf::RenderWindow & window)
 
     sf::Clock clock;
     sf::View camera;
-    camera.setSize(window.getSize().x, window.getSize().y);
-    camera.setCenter(cube.getPosition().x + 400, GROUND - plt.spawn_coord.second*64);
+    camera.setSize(window.getSize().x/1.3, window.getSize().y/1.3);
+    camera.setCenter(cube.getPosition().x + 300, GROUND - plt.spawn_coord.second*64);
 
     sf::Event event;
     bool exit = false;
@@ -109,7 +109,7 @@ void play_game(sf::RenderWindow & window)
         if(lost){
             cube.setPosition(plt.spawn_coord.first*64 + 64 , GROUND - plt.spawn_coord.second*64);
             cube.setRotation(0);
-            camera.setCenter(cube.getPosition().x + 400, GROUND - plt.spawn_coord.second*64);
+            camera.setCenter(cube.getPosition().x + 200, GROUND - plt.spawn_coord.second*64);
             GRAVITY = 7500;
             YSPEED = 0;
             hitboxCube.left = cube.getPosition().x -32;
@@ -136,7 +136,7 @@ void play_game(sf::RenderWindow & window)
                 if (event.key.code == sf::Keyboard::R){
                     cube.setPosition(plt.spawn_coord.first*64 + 64 , GROUND - plt.spawn_coord.second*64);
                     cube.setRotation(0);
-                    camera.setCenter(cube.getPosition().x + 400, GROUND - plt.spawn_coord.second*64);
+                    camera.setCenter(cube.getPosition().x + 200, GROUND - plt.spawn_coord.second*64);
                     GRAVITY = 7500;
                     YSPEED = 0;
                     hitboxCube.left = cube.getPosition().x -32;
@@ -188,12 +188,12 @@ void play_game(sf::RenderWindow & window)
         else
             window.clear(sf::Color(255,150,150));
 
-        camera.setCenter((cube.getPosition().x + 400), (camera.getCenter().y));
-        if(cube.getPosition().y < camera.getCenter().y -200){
-            camera.move(0, -(850*dt.asSeconds()));
+        camera.setCenter((cube.getPosition().x + 200), (camera.getCenter().y));
+        if(cube.getPosition().y < camera.getCenter().y -150){
+            camera.move(0, -(800*dt.asSeconds()));
         }
-        if(cube.getPosition().y > camera.getCenter().y + 200){
-            camera.move(0, (850*dt.asSeconds()));
+        if(cube.getPosition().y > camera.getCenter().y + 100){
+            camera.move(0, (800*dt.asSeconds()));
         }
         window.setView(camera);
 
