@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include  <stdlib.h>
+#include <stdbool.h>
 
 typedef char Board[7][6];
 
@@ -226,7 +227,7 @@ int valuePosition(Game *game, char p){
         heur=nb_align_o - nb_align_x;
     else
         heur=nb_align_x - nb_align_o;
-    heur=(heur)*10 + weigth[game->lastPlay.x]*100;
+    heur=(heur)*100 + weigth[game->lastPlay.x]*10;
     return (heur);
 
 
@@ -304,12 +305,13 @@ int main() {
     initBoard(game.board);
     game.gameState=PLAYING;
     game.current_player='x';
+    game.nb_turn=0;
     unsigned int coups[42];
     printf("Connect 4 !\n");
     printBoard(game.board);
     while(game.gameState==PLAYING) {
         unsigned int choosen_x;
-        if(game.current_player=='x'){
+        if(game.current_player=='o'){
             do {
                 printf("Choose where you want to play (1-7) : ");
                 while (scanf("%u", &choosen_x)!=1){
