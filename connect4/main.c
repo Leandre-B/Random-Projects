@@ -50,7 +50,7 @@ void initBoard(Board board){
 }
 
 void printBoard(const Board board) {
-    printf("-----------------------------\n");
+    printf("------------------------------\n");
     for(unsigned int y=0; y<6; ++y) {
         for(unsigned int x=0; x<7; ++x) {
             if(board[x][y]=='x')
@@ -59,8 +59,10 @@ void printBoard(const Board board) {
                 printf("| " "\e[0;34m" "%c " "\e[0m", board[x][y]);
         }
         printf("|");
-        printf("\n-----------------------------\n");
+        if(y!=5)
+            printf("\n------------------------------\n");
     }
+    printf("\n--1---2---3---4---5---6---7---\n");
 }
 
 unsigned int totalAlign(Game *game, Vect2 direction){
@@ -169,7 +171,7 @@ bool isValidPlay(Board board, unsigned int x) {
         printf("Choosen column must be between 1 and 7. Retry.\n");
         return false;
     }
-    if(getY(board, x)==-1){
+    if(board[x][0]!=' '){
         //printf("Choosen column is full. Retry.\n");
         return false;
     }
@@ -192,27 +194,52 @@ Game copyGame(Game *game){
     return copy;
 }
 
-// return score of the board based on the last move of the current_player last move
-int valuePosition(Game *game){
+// return score of the board based on player p
+//
+int valuePosition(Game *game, char p){
     if(game->gameState==WIN)
-        return (game->current_player=='o' ? 100 : -1000);
+        return (game->current_player==p ? 50000 : -50000);
 
-    unsigned int maxAl=(maxAlign(game)-1)*10;
-    return (game->current_player=='o' ? maxAl : -maxAl);
+    unsigned int nb_align_o=0;
+    unsigned int nb_align_x=0;
+    unsigned int save_x = game->lastPlay.x;
+    unsigned int save_y = game->lastPlay.y;
+    for(unsigned int x=0; x<7; ++x){
+        for(unsigned int y=0; y<6; ++y){
+            if(game->board[x][y]=='o'){
+                game->lastPlay.x=x;
+                game->lastPlay.y=y;
+                nb_align_o+=maxAlign(game);
+            }else if(game->board[x][y]=='x'){
+                game->lastPlay.x=x;
+                game->lastPlay.y=y;
+                nb_align_x+=maxAlign(game);
+            }
 
-
+        }
+    }
+    game->lastPlay.x=save_x;
+    game->lastPlay.y=save_y;
+    unsigned int weigth[]={1, 3, 5, 7, 5, 3, 1};
+    unsigned int heur;
+    if(p=='o')
+        heur=nb_align_o - nb_align_x;
+    else
+        heur=nb_align_x - nb_align_o;
+    heur=(heur)*10 + weigth[game->lastPlay.x]*100;
+    return (heur);
 
 
     return 0;
 }
 
-int minimax(Game *game, unsigned int depth, bool maximizingPlayer){
+int minimax(Game *game, unsigned int depth, bool maximizingPlayer, char p){
 
-    if(depth==0 || game->gameState==DRAW){
-        return valuePosition(game);
+    if(depth==0 || game->gameState==DRAW || game->gameState==WIN){
+        return valuePosition(game, p);
     }
     if(maximizingPlayer){
-        int value=-50000;
+        int value=-500000;
         for(unsigned int x=0; x<7; ++x){
             if(isValidPlay(game->board, x)){
                 Game child=copyGame(game);
@@ -223,13 +250,13 @@ int minimax(Game *game, unsigned int depth, bool maximizingPlayer){
                 child.current_player=switchPlayer(child.current_player);
                 makePlay(&child);
 
-                value=max(value, minimax(&child, depth-1, !maximizingPlayer));
+                value=max(value, minimax(&child, depth-1, !maximizingPlayer, p));
             }
         }
         return value;
 
     }else{
-        int value=50000;
+        int value=500000;
         for(unsigned int x=0; x<7; ++x){
             if(isValidPlay(game->board, x)){
                 Game child=copyGame(game);
@@ -240,7 +267,7 @@ int minimax(Game *game, unsigned int depth, bool maximizingPlayer){
                 child.current_player=switchPlayer(child.current_player);
                 makePlay(&child);
 
-                value=min(value, minimax(&child, depth-1, !maximizingPlayer));
+                value=min(value, minimax(&child, depth-1, !maximizingPlayer, p));
             }
         }
         return value;
@@ -249,8 +276,8 @@ int minimax(Game *game, unsigned int depth, bool maximizingPlayer){
 
 unsigned int bestMove(Game *game){
     int bestMv = -1;
-    int bestValue = -1000;
-
+    int bestValue = -500000;
+    char player=game->current_player;
     for (int x=0; x<7; x++) {
         if(isValidPlay(game->board, x)){
             Game child=copyGame(game);
@@ -258,7 +285,7 @@ unsigned int bestMove(Game *game){
             child.lastPlay.x=x;
             child.lastPlay.y=getY(game->board, x);
             makePlay(&child);
-            int value = minimax(&child, 6, false);
+            int value = minimax(&child, 6, false, player);
 
             if (value > bestValue) {
                 bestValue = value;
@@ -277,9 +304,9 @@ int main() {
     initBoard(game.board);
     game.gameState=PLAYING;
     game.current_player='x';
-
+    unsigned int coups[42];
     printf("Connect 4 !\n");
-
+    printBoard(game.board);
     while(game.gameState==PLAYING) {
         unsigned int choosen_x;
         if(game.current_player=='x'){
@@ -305,7 +332,7 @@ int main() {
         game.lastPlay.x=choosen_x;
         game.lastPlay.y=getY(game.board, choosen_x);
         makePlay(&game);
-
+        coups[game.nb_turn-1]=choosen_x;
 
         printBoard(game.board);
 
@@ -320,6 +347,11 @@ int main() {
         printf("Math is a draw !\n");
     else if(game.gameState==WIN)
         printf("Player %c win !\n", switchPlayer(game.current_player));
+
+    for(unsigned int i=1; i<game.nb_turn; i+=2){
+        printf("%u ", coups[i]+1);
+    }
+    printf("\n");
 
 
     return 0;
