@@ -195,11 +195,69 @@ Game copyGame(Game *game){
     return copy;
 }
 
-// return score of the board based on player p
-//
+unsigned int nbPossibleAlingFromPos(Game *game, Vect2 direction){
+    unsigned int tot=0;
+    Point auxPlay=game->lastPlay;
+    while(  auxPlay.x>=0 && auxPlay.x<7     &&
+            auxPlay.y>=0 && auxPlay.y<6      &&
+            (game->board[auxPlay.x][auxPlay.y]==(game->board[game->lastPlay.x][game->lastPlay.y]) ||
+        game->board[auxPlay.x][auxPlay.y]==' '))
+    {
+        ++tot;
+        auxPlay.x+=direction.x;
+        auxPlay.y+=direction.y;
+    }
+
+    direction.x*=-1;
+    direction.y*=-1;
+
+    auxPlay=game->lastPlay;
+    while(  auxPlay.x>=0 && auxPlay.x<7      &&
+        auxPlay.y>=0 && auxPlay.y<6          &&
+        (game->board[auxPlay.x][auxPlay.y]== (game->board[game->lastPlay.x][game->lastPlay.y]) ||
+        game->board[auxPlay.x][auxPlay.y]==' '))
+    {
+        ++tot;
+        auxPlay.x+=direction.x;
+        auxPlay.y+=direction.y;
+    }
+    return tot-1; //orignal point is counted 2 times
+}
+
+unsigned int nbOfLinePossibleFromPosition(Game *game){
+    unsigned int tot=0;
+    Vect2 direction;
+
+    //DIAGONAL
+    direction.x=1; direction.y=1;
+    if (nbPossibleAlingFromPos(game, direction)>=4){
+        ++tot;
+    }
+
+    direction.x=1; direction.y=-1;
+    if (nbPossibleAlingFromPos(game, direction)>=4){
+        ++tot;
+    }
+
+    //HORINZONTAL
+
+    direction.x=1; direction.y=0;
+    if (nbPossibleAlingFromPos(game, direction)>=4){
+        ++tot;
+    }
+
+    //VERTICAL
+    direction.x=0; direction.y=1;
+    if (nbPossibleAlingFromPos(game, direction)>=4){
+        ++tot;
+    }
+
+    return tot;
+}
+
 int valuePosition(Game *game, char p, unsigned int depth){
     if(game->gameState==WIN)
-        return (game->current_player==p ? 400000+depth : -400000-depth);
+        return (game->current_player==p ? 400000+depth : -400000+depth);
 
     unsigned int nb_align_o=0;
     unsigned int nb_align_x=0;
@@ -210,28 +268,30 @@ int valuePosition(Game *game, char p, unsigned int depth){
             if(game->board[x][y]=='o'){
                 game->lastPlay.x=x;
                 game->lastPlay.y=y;
-                nb_align_o+=maxAlign(game);
+                nb_align_o+=nbOfLinePossibleFromPosition(game);
             }else if(game->board[x][y]=='x'){
                 game->lastPlay.x=x;
                 game->lastPlay.y=y;
-                nb_align_x+=maxAlign(game);
+                nb_align_x+=nbOfLinePossibleFromPosition(game);
             }
 
         }
     }
     game->lastPlay.x=save_x;
     game->lastPlay.y=save_y;
-    unsigned int weigth[]={1, 3, 5, 7, 5, 3, 1};
-    unsigned int heur;
+    // printf("o : %u\n", nb_align_o);
+    // printf("x : %u\n", nb_align_x);
+
+
+    //unsigned int weigth[]={1, 3, 5, 7, 5, 3, 1};
+    int heur;
     if(p=='o')
         heur=nb_align_o - nb_align_x;
     else
         heur=nb_align_x - nb_align_o;
-    heur=(heur)*50 + weigth[game->lastPlay.x]*10;
+    //heur=(heur)*50 + weigth[game->lastPlay.x]*10;
     return (heur);
 
-
-    return 0;
 }
 
 int minimaxAB(Game *game, unsigned int depth, bool maximizingPlayer, char p, int alpha, int beta){
@@ -316,8 +376,8 @@ unsigned int bestMove(Game *game){
             child.lastPlay.x=x;
             child.lastPlay.y=getY(game->board, x);
             makePlay(&child);
-            int value = minimaxAB(&child, 8, false, player, -500000, 500000);
-            printf("%i |",value);
+            int value = minimaxAB(&child, 9, false, player, -500000, 500000);
+            printf("%i |  ",value);
             if (value > bestValue) {
                 bestValue = value;
                 bestMv = x;
@@ -340,7 +400,7 @@ int main() {
     printBoard(game.board);
     while(game.gameState==PLAYING) {
         unsigned int choosen_x;
-        if(game.current_player=='x'){
+        if(game.current_player=='o' && false){
             do {
                 printf("Choose where you want to play (1-7) : ");
                 while (scanf("%u", &choosen_x)!=1){
