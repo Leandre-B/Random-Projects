@@ -51,7 +51,7 @@ void playOffline(){
     if(game.gameState==DRAW)
         printf("Math is a draw !\n");
     else if(game.gameState==WIN)
-        printf("Win !\n", game.currentPlayer->symbole);
+        printf("GG\n");
 
 
     for(unsigned int i=1; i<game.nbTurn; i+=2){
@@ -133,7 +133,7 @@ void playOnline(){
                 send(sockfd, buffer, strlen(buffer), 0);
             }
             else { //server sends the opponent's play
-                printf("Opponent plays in : %s\n", buffer);
+                printf("Opponent plays in : %d\n", atoi(buffer)+1);
 
                 makePlay(&game, atoi(buffer));
                 printBoard(game.board);
@@ -141,11 +141,14 @@ void playOnline(){
             }
         }
     }
+
+    if(game.gameState==DRAW)
+        printf("Math is a draw !\n");
+    else if(game.gameState==WIN)
+        printf("GG\n");
 }
 
 int main() {
-    playOnline();
-    return 0;
     unsigned int playMethod=0;
     do {
         printf("Play offline or online ?\n1 - Online\n2 - Offline\n");
