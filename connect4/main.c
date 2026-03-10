@@ -93,18 +93,25 @@ void playOnline(){
     Game game;
     initGame(&game, true);
     printBoard(game.board);
-    unsigned int choosen_x;
-    bool myTurn=false;
-    bool ready=false;
     while(game.gameState==PLAYING) {
-        char buffer[256] = { 0 };
+        char buffer[256] = {0};
         poll(fds, 2, -1);
 
         if(fds[0].revents & POLLIN) {
-            if(myTurn){
-                sscanf(buffer, "%d", choosen_x);
-                while(!isValidPlay(game.board, choosen_x)) {
-                    printf("Not valid, retry\n");
+            printf("It's not yout turn yet.\n");
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+        }
+        else if (fds[1].revents & POLLIN) {
+            if (recv(sockfd, buffer, sizeof(buffer), 0) == 0) {
+                return;
+            }
+            if(strcmp(buffer, "YOUR_TURN\n")==0) {
+
+                printf("Your Turn\n");
+                unsigned int choosen_x=0;
+                do {
+                    printf("Choose where you want to play (1-7) :\n");
                     while (scanf("%u", &choosen_x)!=1){
                         printf("Error : not an number !\n");
 
@@ -114,49 +121,31 @@ void playOnline(){
 
                         printf("Not valid, retry\n");
                     }
-                    printf("%u\n", choosen_x);
                     --choosen_x;
-                }
-                send(sockfd, buffer, strlen(buffer), 0);
+                } while(!isValidPlay(game.board, choosen_x));
 
                 makePlay(&game, choosen_x);
                 printBoard(game.board);
                 printf("\n");
 
-                myTurn=false;
-            }else{
-                printf("It's not yout turn yet.\n");
-                int c;
-                while ((c = getchar()) != '\n' && c != EOF);
+                // Converting integer to string using sprintf
+                sprintf(buffer, "%u", choosen_x);
+                send(sockfd, buffer, strlen(buffer), 0);
             }
-        }
-        if (fds[1].revents & POLLIN) {
-            if (recv(sockfd, buffer, sizeof(buffer), 0) == 0) {
-                return;
-            }
-            if(ready){
+            else { //server sends the opponent's play
                 printf("Opponent plays in : %s\n", buffer);
 
-                makePlay(&game, choosen_x);
+                makePlay(&game, atoi(buffer));
                 printBoard(game.board);
                 printf("\n");
-                sscanf(&buffer[0], "%d", choosen_x);
-            }
-
-            if(strcmp(buffer, "READY\n") == 0){
-                ready=true;
-                printf("Game can start\n");
-                printf("Choose where you want to play (1-7) : \n");
-                myTurn=true;
-            }else if(strcmp(buffer, "YOUR_TURN\n") == 0){
-                printf("Choose where you want to play (1-7) : \n");
-                myTurn=true;
             }
         }
     }
 }
 
 int main() {
+    playOnline();
+    return 0;
     unsigned int playMethod=0;
     do {
         printf("Play offline or online ?\n1 - Online\n2 - Offline\n");
@@ -172,8 +161,11 @@ int main() {
     }while(playMethod!=1 && playMethod!=2);
 
 
-    if(playMethod==1)
+    if(playMethod==1){
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
         playOnline();
+    }
     else
         playOffline();
 

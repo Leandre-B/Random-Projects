@@ -4,6 +4,7 @@
 #include <poll.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdbool.h>
 
 int main() {
     //                  IPV4       TCP      default
@@ -40,7 +41,7 @@ int main() {
 
         if(firstMsg){
             printf("Envoie signle turn\n");
-            char msg[]="READY\n";
+            char msg[]="YOUR_TURN\n";
             send(clientfd_1, msg, strlen(msg), 0);
             firstMsg=false;
         }
@@ -62,7 +63,7 @@ int main() {
                 return 0;
             }
 
-            printf("Client 1 dit : %s", buffer);
+            printf("Client 1 dit : %s\n", buffer);
             send(clientfd_2, buffer, strlen(buffer), 0);
 
             sleep(0); //separe les 2 send
@@ -77,9 +78,9 @@ int main() {
                 return 0;
             }
 
-            printf("Client 2 dit : %s", buffer);
+            printf("Client 2 dit : %s\n", buffer);
             send(clientfd_1, buffer, strlen(buffer), 0);
-
+            sleep(0);
             char msg[]="YOUR_TURN\n";
             send(clientfd_1, msg, strlen(msg), 0);
         }
